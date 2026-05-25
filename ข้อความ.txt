@@ -1,0 +1,1753 @@
+```html
+<!doctype html>
+<html lang="th" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบส่งงานนักเรียน - โรงเรียนมหิศราธิบดี</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800&amp;display=swap" rel="stylesheet">
+  
+  <style>
+* { font-family: 'Sarabun', sans-serif; }
+html, body { height: 100%; margin: 0; }
+.glass {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+.glass-dark {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+.gradient-bg {
+  background: linear-gradient(135deg, #064e3b 0%, #1e3a5f 50%, #ca8a04 100%);
+}
+.btn-primary {
+  background: linear-gradient(135deg, #059669, #0d9488);
+  transition: all 0.3s;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(5,150,105,0.4);
+}
+.btn-danger {
+  background: linear-gradient(135deg, #dc2626, #e11d48);
+  transition: all 0.3s;
+}
+.btn-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(220,38,38,0.4);
+}
+.btn-warning {
+  background: linear-gradient(135deg, #d97706, #f59e0b);
+  transition: all 0.3s;
+}
+.btn-warning:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(217,119,6,0.4);
+}
+.btn-info {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  transition: all 0.3s;
+}
+.btn-info:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(37,99,235,0.4);
+}
+.card-hover { transition: all 0.3s ease; }
+.card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.15); }
+.scroll-area { max-height: 400px; overflow-y: auto; }
+.scroll-area::-webkit-scrollbar { width: 6px; }
+.scroll-area::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 3px; }
+input, select { transition: all 0.2s; }
+input:focus, select:focus { box-shadow: 0 0 0 3px rgba(5,150,105,0.2); }
+.fade-in { animation: fadeIn 0.5s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+.page { display: none; }
+.page.active { display: block; }
+</style>
+ </head>
+ <body class="h-full">
+  <div id="app" class="h-full overflow-auto">
+   
+   <!-- LOADING BAR FOR CLOUD SYNC -->
+   <div id="syncIndicator" class="fixed top-0 left-0 w-full h-1 bg-emerald-500 z-50 transition-all duration-300" style="width: 0%;"></div>
+
+   <!-- LOGIN PAGE - Full Screen -->
+   <div id="loginPage" class="page min-h-full p-4 fade-in flex items-center justify-center active" style="background: linear-gradient(135deg, rgba(6,78,59,0.85) 0%, rgba(30,58,95,0.85) 50%, rgba(202,138,4,0.75) 100%), url('https://img5.pic.in.th/file/secure-sv1/-2bae623aeace54ecf.png'); background-size: cover; background-position: center; background-attachment: fixed;">
+    <div class="min-h-full w-full flex items-center justify-center">
+     <div class="max-w-md w-full">
+      <div class="glass rounded-3xl p-8 shadow-2xl card-hover">
+       <div class="text-center mb-8">
+        <div class="w-24 h-24 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-4 shadow-md text-white text-4xl font-bold">🏫</div>
+        <h1 class="text-3xl font-extrabold text-emerald-800 mb-2">📚 ระบบส่งงาน</h1>
+        <p class="text-gray-600 font-semibold">โรงเรียนมหิศราธิบดี</p>
+        <span class="inline-block mt-2 px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full">⚡ ระบบคลาวด์เรียลไทม์</span>
+       </div>
+       <div class="space-y-4">
+        <div>
+         <label class="block text-sm font-semibold text-gray-700 mb-2">👤 ชื่อผู้ใช้ (Username)</label>
+         <input id="loginUser" type="text" placeholder="กรุณากรอกชื่อผู้ใช้ หรือรหัสนักเรียน" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 bg-white/90 font-semibold text-center text-gray-700">
+        </div>
+        <div>
+         <label class="block text-sm font-semibold text-gray-700 mb-2">🔐 รหัสผ่าน (Password)</label>
+         <input id="loginPass" type="password" placeholder="กรุณากรอกรหัสผ่าน" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 bg-white/90 text-center text-gray-700" onkeydown="if(event.key==='Enter') doLogin()">
+        </div>
+        <button onclick="doLogin()" class="btn-primary w-full text-white px-6 py-3 rounded-xl font-bold text-lg shadow-lg">🔓 เข้าสู่ระบบ</button>
+        <div class="text-center mt-4">
+          <p class="text-xs text-gray-500 font-semibold">ระบบเชื่อมโยงข้อมูลส่งงานข้ามเครื่องแบบเรียลไทม์</p>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div><!-- END LOGIN PAGE --> 
+
+   <!-- TEACHER DASHBOARD -->
+   <div id="teacherPage" class="page min-h-full p-4 fade-in" style="background: linear-gradient(135deg, rgba(240, 253, 244, 0.95), rgba(239, 246, 255, 0.95)), url('https://img5.pic.in.th/file/secure-sv1/-2bae623aeace54ecf.png'); background-size: cover; background-position: center; background-attachment: fixed;">
+    <div class="max-w-6xl mx-auto">
+     <div class="glass rounded-3xl p-3 mb-4 flex flex-wrap gap-2 justify-between items-center shadow-md">
+      <div class="flex flex-wrap gap-1">
+       <button onclick="showTab('students')" class="tab-btn px-4 py-2 rounded-xl font-semibold text-sm transition-all bg-emerald-600 text-white" data-tab="students">👥 จัดการนักเรียน</button> 
+       <button onclick="showTab('assignments')" class="tab-btn px-4 py-2 rounded-xl font-semibold text-sm transition-all hover:bg-emerald-100 text-gray-700" data-tab="assignments">📝 จัดการงาน</button> 
+       <button onclick="showTab('exams')" class="tab-btn px-4 py-2 rounded-xl font-semibold text-sm transition-all hover:bg-emerald-100 text-gray-700" data-tab="exams">📊 จัดการสอบ</button> 
+       <button onclick="showTab('scan')" class="tab-btn px-4 py-2 rounded-xl font-semibold text-sm transition-all hover:bg-emerald-100 text-gray-700" data-tab="scan">📷 สแกนส่งงาน</button> 
+       <button onclick="showTab('submissions')" class="tab-btn px-4 py-2 rounded-xl font-semibold text-sm transition-all hover:bg-emerald-100 text-gray-700" data-tab="submissions">✅ ตรวจสอบการส่งงาน</button> 
+       <button onclick="showTab('files')" class="tab-btn px-4 py-2 rounded-xl font-semibold text-sm transition-all hover:bg-emerald-100 text-gray-700" data-tab="files">📁 ดูไฟล์ที่ส่ง</button> 
+       <button onclick="showTab('classrooms')" class="tab-btn px-4 py-2 rounded-xl font-semibold text-sm transition-all hover:bg-emerald-100 text-gray-700" data-tab="classrooms">🏫 ห้องเรียน</button>
+      </div>
+      <button onclick="showLogoutConfirm()" class="btn-danger text-white px-4 py-2 rounded-xl text-sm font-semibold shadow">🚪 ออกจากระบบ</button>
+     </div>
+
+     <!-- Tab: Students -->
+     <div id="tab-students" class="tab-content">
+      <div class="glass rounded-3xl p-6 mb-4 card-hover shadow-md">
+       <h3 class="text-lg font-bold text-emerald-800 mb-4 flex items-center gap-2"><i data-lucide="user-plus"></i> เพิ่มข้อมูลนักเรียน</h3>
+       <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <input id="stuId" type="text" placeholder="รหัสนักเรียน (เช่น 1001)" class="px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-emerald-500 bg-white/80"> 
+        <input id="stuName" type="text" placeholder="ชื่อ-สกุล" class="px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-emerald-500 bg-white/80"> 
+        <select id="stuRoom" class="px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-emerald-500 bg-white/80"></select> 
+        <button onclick="addStudent()" class="btn-primary text-white px-4 py-2 rounded-xl font-semibold">เพิ่มนักเรียน</button>
+       </div>
+       <div class="mt-4 border-t border-gray-200 pt-4">
+        <label class="text-sm text-gray-600 font-semibold mb-2 block">📋 Import รายชื่อ (รหัส,ชื่อ-สกุล,ห้อง ต่อหนึ่งบรรทัด):</label> 
+        <textarea id="importStudents" rows="3" placeholder="เช่น:&#10;1001,สมชาย ใจดี,6/1&#10;1002,สมหญิง รักดี,6/1" class="w-full mt-1 px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-emerald-500 bg-white/80 text-sm"></textarea>
+        <div class="flex flex-wrap gap-2 mt-2">
+          <button onclick="importStudentList()" class="btn-info text-white px-4 py-2 rounded-xl font-semibold text-sm flex-1">📋 Import รายชื่อแบบไว</button>
+          <button onclick="document.getElementById('excelInputStudent').click()" class="btn-warning text-white px-4 py-2 rounded-xl font-semibold text-sm flex-1">📊 Import จาก Excel</button>
+          <input type="file" id="excelInputStudent" class="hidden" accept=".xlsx,.xls" onchange="importStudentExcel(event)">
+        </div>
+       </div>
+      </div>
+      <div class="glass rounded-3xl p-6 card-hover shadow-md">
+       <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+        <div class="flex gap-2 items-center">
+         <h3 class="text-lg font-bold text-emerald-800">📋 รายชื่อนักเรียนทั้งหมด</h3>
+         <select id="roomFilter" onchange="renderStudentsByRoom()" class="px-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-emerald-500 bg-white/80 text-sm">
+           <option value="">📚 ทั้งหมด</option>
+         </select>
+        </div>
+        <input id="searchStudent" type="text" placeholder="🔍 ค้นหา (รหัส หรือ ชื่อ)..." oninput="renderStudentsByRoom()" class="px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-emerald-500 bg-white/80 text-sm w-64">
+       </div>
+       <div class="scroll-area bg-white/40 p-2 rounded-2xl" id="studentTable"></div>
+      </div>
+     </div>
+
+     <!-- Tab: Assignments -->
+     <div id="tab-assignments" class="tab-content hidden">
+      <div class="glass rounded-3xl p-6 mb-4 card-hover shadow-md">
+       <h3 class="text-lg font-bold text-emerald-800 mb-4 flex items-center gap-2"><i data-lucide="file-plus"></i> เพิ่มมอบหมายชิ้นงาน</h3>
+       <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+         <input id="assignName" type="text" placeholder="ชื่องาน (เช่น ใบงานที่ 1 การเขียนโปรแกรม)" class="px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-emerald-500 bg-white/80"> 
+         <input id="assignDate" type="datetime-local" class="px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-emerald-500 bg-white/80"> 
+         <button onclick="addAssignment()" class="btn-primary text-white px-4 py-2 rounded-xl font-semibold">เพิ่มใบงาน</button>
+       </div>
+      </div>
+      <div class="glass rounded-3xl p-6 card-hover shadow-md">
+       <h3 class="text-lg font-bold text-emerald-800 mb-4">📋 รายการใบงานมอบหมายทั้งหมด</h3>
+       <div class="scroll-area bg-white/40 p-2 rounded-2xl" id="assignmentList"></div>
+      </div>
+     </div>
+
+     <!-- Tab: Exams -->
+     <div id="tab-exams" class="tab-content hidden">
+      <div class="glass rounded-3xl p-6 mb-4 card-hover shadow-md">
+       <h3 class="text-lg font-bold text-emerald-800 mb-4 flex items-center gap-2"><i data-lucide="bar-chart-3"></i> จัดการผลการสอบ</h3>
+       <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+         <input id="examName" type="text" placeholder="ชื่อการสอบ (เช่น สอบกลางภาค)" class="px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-emerald-500 bg-white/80"> 
+         <input id="examMaxScore" type="number" placeholder="คะแนนเต็ม" value="20" class="px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-emerald-500 bg-white/80">
+         <button onclick="addExam()" class="btn-primary text-white px-4 py-2 rounded-xl font-semibold">เพิ่มหัวข้อการสอบ</button>
+       </div>
+       <div class="mt-3 border-t border-gray-200 pt-4">
+        <label class="text-sm text-gray-600 font-semibold mb-2 block">📋 นำเข้าผลคะแนน (รหัสนักเรียน,คะแนน ต่อหนึ่งบรรทัด):</label> 
+        <div class="mb-2">
+          <select id="examScoreSelect" class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-emerald-500 bg-white/80 text-sm">
+            <option value="">-- เลือกหัวข้อสอบที่จะนำเข้าคะแนน --</option>
+          </select>
+        </div>
+        <textarea id="importExamScores" rows="3" placeholder="เช่น:&#10;1001,18&#10;1002,15" class="w-full mt-1 px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-emerald-500 bg-white/80 text-sm"></textarea>
+        <div class="flex flex-wrap gap-2 mt-2">
+          <button onclick="importExamScores()" class="btn-info text-white px-4 py-2 rounded-xl font-semibold text-sm flex-1">📋 นำเข้าคะแนนแบบไว</button>
+          <button onclick="document.getElementById('excelInputExam').click()" class="btn-warning text-white px-4 py-2 rounded-xl font-semibold text-sm flex-1">📊 Import คะแนนจาก Excel</button>
+          <input type="file" id="excelInputExam" class="hidden" accept=".xlsx,.xls" onchange="importExamExcel(event)">
+        </div>
+       </div>
+      </div>
+      <div class="glass rounded-3xl p-6 card-hover shadow-md">
+       <h3 class="text-lg font-bold text-emerald-800 mb-4">📋 สรุปรายการคะแนนสอบทั้งหมด</h3>
+       <div class="scroll-area bg-white/40 p-2 rounded-2xl" id="examList"></div>
+      </div>
+     </div>
+
+     <!-- Tab: Scan -->
+     <div id="tab-scan" class="tab-content hidden">
+      <div class="glass rounded-3xl p-6 card-hover shadow-md">
+       <h3 class="text-lg font-bold text-emerald-800 mb-4 flex items-center gap-2"><i data-lucide="qr-code"></i> สแกนรหัสเพื่อส่งงาน (Barcode / Fast Input)</h3>
+       <p class="text-sm text-gray-500 mb-4">สามารถใช้ปืนสแกนบาร์โค้ดสแกนรหัสนักเรียนลงในช่องนี้ หรือพิมพ์ตัวเลขรหัสแล้วกด Enter เพื่อเช็คชื่อส่งงานได้ทันทีอย่างรวดเร็ว</p>
+       <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+         <div>
+           <label class="block text-sm font-semibold text-gray-700 mb-1">📋 เลือกใบงานมอบหมาย</label>
+           <select id="scanAssignment" class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-emerald-500 bg-white/80"></select>
+         </div>
+         <div>
+           <label class="block text-sm font-semibold text-gray-700 mb-1">🔢 รหัสนักเรียน</label>
+           <input id="scanInput" type="text" placeholder="สแกนบาร์โค้ด หรือ พิมพ์รหัสแล้ว Enter" class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-emerald-500 bg-white/80" onkeydown="handleScan(event)">
+         </div>
+       </div>
+       <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+         <h4 class="font-bold text-emerald-800 mb-2 flex items-center justify-between">
+           <span>⚡ Log ประวัติการสแกนล่าสุด</span>
+           <button onclick="clearScanLog()" class="text-xs text-red-500 font-bold hover:underline">ล้างประวัติการสแกน</button>
+         </h4>
+         <div class="scroll-area text-sm font-mono space-y-1" id="scanLog">
+           <p class="text-gray-400 text-center py-4">ยังไม่มีประวัติการเช็คชื่อ/สแกนส่งงานในเซสชันนี้</p>
+         </div>
+       </div>
+      </div>
+     </div>
+
+     <!-- Tab: Check Submissions -->
+     <div id="tab-submissions" class="tab-content hidden">
+      <div class="glass rounded-3xl p-6 card-hover shadow-md">
+       <h3 class="text-lg font-bold text-emerald-800 mb-4 flex items-center gap-2"><i data-lucide="clipboard-check"></i> ตรวจสอบตารางการส่งงาน</h3>
+       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">📝 เลือกงานที่ต้องการตรวจสอบ</label> 
+          <select id="submissionFilterAssign" onchange="renderSubmissionStatus()" class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-emerald-500 bg-white/80"></select>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">🏫 เลือกห้องเรียน</label> 
+          <select id="submissionFilterRoom" onchange="renderSubmissionStatus()" class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-emerald-500 bg-white/80"></select>
+        </div>
+       </div>
+       <div class="scroll-area bg-white/50 p-2 rounded-2xl" id="submissionTable"></div>
+       <div class="flex gap-2 mt-4">
+         <button onclick="downloadSubmissionPDF()" class="btn-info text-white px-6 py-3 rounded-xl font-bold flex-1 shadow-lg flex items-center justify-center gap-2">
+           <i data-lucide="file-text"></i> ดาวน์โหลดรายงานสรุป PDF
+         </button>
+         <button onclick="downloadSubmissionExcel()" class="btn-warning text-white px-6 py-3 rounded-xl font-bold flex-1 shadow-lg flex items-center justify-center gap-2">
+           <i data-lucide="table"></i> ดาวน์โหลดรายงานสรุป Excel
+         </button>
+       </div>
+      </div>
+     </div>
+
+     <!-- Tab: View Files -->
+     <div id="tab-files" class="tab-content hidden">
+      <div class="glass rounded-3xl p-6 card-hover shadow-md">
+       <h3 class="text-lg font-bold text-emerald-800 mb-4 flex items-center gap-2"><i data-lucide="folder-open"></i> ไฟล์ที่นักเรียนส่งเข้ามาในระบบ</h3>
+       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">📝 กรองตามใบงาน</label> 
+          <select id="fileFilterAssign" onchange="renderSubmittedFiles()" class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-emerald-500 bg-white/80"></select>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">🏫 กรองตามห้องเรียน</label> 
+          <select id="fileFilterRoom" onchange="renderSubmittedFiles()" class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-emerald-500 bg-white/80"></select>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">🔍 ค้นหา</label> 
+          <input id="fileSearchBox" type="text" placeholder="พิมพ์ชื่อนักเรียน หรือรหัส..." oninput="renderSubmittedFiles()" class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-emerald-500 bg-white/80">
+        </div>
+       </div>
+       <div class="scroll-area bg-white/40 p-2 rounded-2xl" id="filesList"></div>
+      </div>
+     </div>
+
+     <!-- Tab: Classrooms -->
+     <div id="tab-classrooms" class="tab-content hidden">
+      <div class="glass rounded-3xl p-6 card-hover shadow-md">
+       <h3 class="text-lg font-bold text-emerald-800 mb-4 flex items-center gap-2"><i data-lucide="school"></i> จัดการระดับชั้น/ห้องเรียน</h3>
+       <div class="flex gap-3 mb-4">
+         <input id="newRoom" type="text" placeholder="เช่น 6/5" class="px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-emerald-500 bg-white/80"> 
+         <button onclick="addClassroom()" class="btn-primary text-white px-4 py-2 rounded-xl font-semibold">เพิ่มห้อง</button>
+       </div>
+       <div id="classroomList" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
+      </div>
+     </div>
+
+    </div>
+   </div><!-- END TEACHER PAGE --> 
+
+   <!-- STUDENT PAGE -->
+   <div id="studentPage" class="page min-h-full p-4 fade-in" style="background: linear-gradient(135deg, rgba(236, 253, 245, 0.95), rgba(240, 253, 250, 0.95)), url('https://img5.pic.in.th/file/secure-sv1/-2bae623aeace54ecf.png'); background-size: cover; background-position: center; background-attachment: fixed;">
+    <div class="max-w-2xl mx-auto">
+     <div class="glass rounded-3xl p-6 mb-4 card-hover flex items-center justify-between shadow-md">
+      <div class="flex items-center gap-6 flex-1">
+       <div class="relative">
+        <img id="studentAvatar" src="" alt="Profile" class="w-20 h-20 rounded-full border-4 border-emerald-300 object-cover bg-gray-200" onerror="this.src='https://api.dicebear.com/7.x/adventurer/svg?seed=stud';" loading="lazy"> 
+        <label class="absolute bottom-0 right-0 bg-emerald-600 text-white w-7 h-7 rounded-full flex items-center justify-center cursor-pointer text-xs shadow-lg">📷 
+          <input type="file" id="avatarInput" accept="image/*" class="hidden" onchange="changeAvatar(event)"> 
+        </label>
+       </div>
+       <div class="flex-1">
+        <h3 id="stuDisplayName" class="text-xl font-bold text-gray-800"></h3>
+        <p id="stuDisplayId" class="text-gray-500 text-sm">รหัส: -</p>
+        <p id="stuDisplayRoom" class="text-gray-500 text-sm">ห้อง: -</p>
+       </div>
+      </div>
+      <button onclick="showLogoutConfirm()" class="btn-danger text-white px-4 py-2 rounded-xl text-sm font-semibold shadow">🚪 ออกจากระบบ</button>
+     </div>
+
+     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div class="glass rounded-3xl p-5 card-hover shadow-sm">
+       <h4 class="font-bold text-emerald-800 mb-3 flex items-center gap-2"><i data-lucide="book-check"></i> สถานะการส่งงาน</h4>
+       <div id="stuAssignStatus" class="scroll-area space-y-2 text-sm bg-white/50 p-2 rounded-xl"></div>
+      </div>
+      <div class="glass rounded-3xl p-5 card-hover shadow-sm">
+       <h4 class="font-bold text-emerald-800 mb-3 flex items-center gap-2"><i data-lucide="trophy"></i> ผลคะแนนการสอบ</h4>
+       <div id="stuExamScores" class="scroll-area space-y-2 text-sm bg-white/50 p-2 rounded-xl"></div>
+      </div>
+     </div>
+
+     <div class="glass rounded-3xl p-6 card-hover shadow-md">
+      <h4 class="font-bold text-emerald-800 mb-3 flex items-center gap-1"><i data-lucide="upload-cloud"></i> อัปโหลดและส่งงานออนไลน์</h4>
+      
+      <div class="mb-3">
+        <label class="block text-sm font-semibold text-gray-700 mb-1">📝 เลือกงานที่ต้องการส่ง</label>
+        <select id="stuSubmitAssign" class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-emerald-500 bg-white/80 mb-3"></select>
+      </div>
+
+      <div class="mb-4">
+       <label class="text-sm text-gray-600 font-semibold block mb-1">📎 เลือกไฟล์งานของคุณ (PDF หรือ รูปภาพ)</label>
+       <div class="mt-2 flex items-center gap-2">
+         <input type="file" id="stuSubmitFile" accept=".pdf,.jpg,.jpeg,.png,.gif,.bmp" class="flex-1 px-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-emerald-500 bg-white/80 text-xs"> 
+         <span id="stuFileStatus" class="text-xs text-gray-500 font-medium">ยังไม่ได้เลือกไฟล์</span>
+       </div>
+       <p class="text-[11px] text-gray-500 mt-1">✓ ระบบบีบอัดรูปภาพอัตโนมัติเพื่อป้องกันข้อมูลขัดข้อง (รองรับสูงสุด 10 MB)</p>
+      </div>
+
+      <button onclick="studentSubmit()" class="btn-primary text-white px-6 py-3 rounded-xl font-bold w-full mb-2 shadow-md flex items-center justify-center gap-2">
+        <i data-lucide="send"></i> ยืนยันการส่งงาน
+      </button> 
+      <button onclick="viewMySubmissions()" class="btn-info text-white px-6 py-3 rounded-xl font-bold w-full shadow shadow-inner flex items-center justify-center gap-2">
+        <i data-lucide="history"></i> ดูประวัติ/ไฟล์ภาพที่เคยส่ง
+      </button>
+     </div>
+    </div>
+   </div>
+  </div>
+
+  <!-- Firebase Scripts (ES modules) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // ----------------------------------------------------
+    // INITIAL CONFIGURATION & FALLBACKS (STANDARD ENGINE)
+    // ----------------------------------------------------
+    const defaultFirebaseConfig = {
+      apiKey: "",
+      authDomain: "default-app-id.firebaseapp.com",
+      projectId: "default-app-id",
+      storageBucket: "default-app-id.appspot.com",
+      messagingSenderId: "1234567890",
+      appId: "1:1234:web:abcd"
+    };
+
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : defaultFirebaseConfig;
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'mahissara-app-v1';
+
+    // ----------------------------------------------------
+    // GLOBAL APP STATE VARIABLES
+    // ----------------------------------------------------
+    window.students = [];
+    window.assignments = [];
+    window.exams = [];
+    window.submissions = {};
+    window.submittedFiles = [];
+    window.classrooms = ['6/1', '6/2', '6/3', '6/4'];
+    window.currentUser = null;
+    window.scanLog = [];
+
+    // ----------------------------------------------------
+    // FIRESTORE DOCUMENT REFERENCES (FOLLOW RULE 1)
+    // ----------------------------------------------------
+    const docClassrooms = doc(db, 'artifacts', appId, 'public', 'data', 'school_config', 'classrooms');
+    const docStudents = doc(db, 'artifacts', appId, 'public', 'data', 'school_config', 'students');
+    const docAssignments = doc(db, 'artifacts', appId, 'public', 'data', 'school_config', 'assignments');
+    const docExams = doc(db, 'artifacts', appId, 'public', 'data', 'school_config', 'exams');
+    const docSubmissions = doc(db, 'artifacts', appId, 'public', 'data', 'school_config', 'submissions');
+    const colSubmittedFiles = collection(db, 'artifacts', appId, 'public', 'data', 'submitted_files');
+
+    // ----------------------------------------------------
+    // SYSTEM AUTHENTICATION (FOLLOW RULE 3)
+    // ----------------------------------------------------
+    let userAuth = null;
+    let loadingTimer = null;
+
+    const startProgress = () => {
+      const el = document.getElementById('syncIndicator');
+      if(el) { el.style.width = '30%'; el.style.opacity = '1'; }
+    };
+    const finishProgress = () => {
+      const el = document.getElementById('syncIndicator');
+      if(el) {
+        el.style.width = '100%';
+        if(loadingTimer) clearTimeout(loadingTimer);
+        loadingTimer = setTimeout(() => {
+          el.style.opacity = '0';
+          setTimeout(() => el.style.width = '0%', 300);
+        }, 500);
+      }
+    };
+
+    const initAuth = async () => {
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (err) {
+        console.error("Firebase auth error:", err);
+      }
+    };
+
+    initAuth();
+
+    onAuthStateChanged(auth, async (user) => {
+      userAuth = user;
+      if (user) {
+        await checkAndInitDefaults();
+        setupFirestoreListeners();
+      }
+    });
+
+    // ----------------------------------------------------
+    // INITIALIZATION & FALLBACK INSERTS
+    // ----------------------------------------------------
+    const checkAndInitDefaults = async () => {
+      try {
+        const snap = await getDoc(docClassrooms);
+        if (!snap.exists()) {
+          const initialStudents = [
+            { id: "1001", name: "สมชาย ใจดี", room: "6/1", avatar: "" },
+            { id: "1002", name: "สมหญิง รักเรียน", room: "6/1", avatar: "" },
+            { id: "1003", name: "กฤษณา แดนสวรรค์", room: "6/2", avatar: "" },
+            { id: "1004", name: "ปิยะพงษ์ ยอดรัก", room: "6/2", avatar: "" }
+          ];
+          const initialAssignments = [
+            { name: "ใบงานที่ 1 ประวัติความเป็นมาคอมพิวเตอร์", date: "2026-06-15T16:30" },
+            { name: "ใบงานที่ 2 การเขียนโปรแกรมเบื้องต้นด้วย Python", date: "2026-06-30T16:30" }
+          ];
+          const initialExams = [
+            { name: "สอบกลางภาควิชาเทคโนโลยี 1", maxScore: 20, scores: { "1001": 18, "1002": 15, "1003": 12 } },
+            { name: "สอบย่อยเรื่องระบบเครือข่าย", maxScore: 10, scores: { "1001": 9, "1002": 10 } }
+          ];
+          const initialSubmissions = {
+            "ใบงานที่ 1 ประวัติความเป็นมาคอมพิวเตอร์": ["1001", "1002"],
+            "ใบงานที่ 2 การเขียนโปรแกรมเบื้องต้นด้วย Python": ["1001"]
+          };
+          
+          await setDoc(docClassrooms, { list: window.classrooms });
+          await setDoc(docStudents, { list: initialStudents });
+          await setDoc(docAssignments, { list: initialAssignments });
+          await setDoc(docExams, { list: initialExams });
+          await setDoc(docSubmissions, { data: initialSubmissions });
+        }
+      } catch (err) {
+        console.error("Initialization error:", err);
+      }
+    };
+
+    // ----------------------------------------------------
+    // REAL-TIME CLOUD LISTENERS
+    // ----------------------------------------------------
+    const setupFirestoreListeners = () => {
+      // 1. Listen Classrooms
+      onSnapshot(docClassrooms, (snap) => {
+        if(snap.exists()) {
+          startProgress();
+          window.classrooms = snap.data().list || [];
+          window.renderClassrooms();
+          window.updateRoomSelects();
+          finishProgress();
+        }
+      }, (err) => console.error("Classroom stream error:", err));
+
+      // 2. Listen Students
+      onSnapshot(docStudents, (snap) => {
+        if(snap.exists()) {
+          startProgress();
+          window.students = snap.data().list || [];
+          window.renderStudentsByRoom();
+          if (window.currentUser && window.currentUser.role === 'student') {
+            const freshData = window.students.find(s => s.id === window.currentUser.data.id);
+            if(freshData) window.currentUser.data = freshData;
+            window.renderStudentPage();
+          }
+          finishProgress();
+        }
+      }, (err) => console.error("Student stream error:", err));
+
+      // 3. Listen Assignments
+      onSnapshot(docAssignments, (snap) => {
+        if(snap.exists()) {
+          startProgress();
+          window.assignments = snap.data().list || [];
+          window.renderAssignments();
+          window.initSubmissionFilters();
+          if (window.currentUser && window.currentUser.role === 'student') {
+            window.renderStudentPage();
+          }
+          finishProgress();
+        }
+      }, (err) => console.error("Assignment stream error:", err));
+
+      // 4. Listen Exams
+      onSnapshot(docExams, (snap) => {
+        if(snap.exists()) {
+          startProgress();
+          window.exams = snap.data().list || [];
+          window.renderExams();
+          if (window.currentUser && window.currentUser.role === 'student') {
+            window.renderStudentPage();
+          }
+          finishProgress();
+        }
+      }, (err) => console.error("Exams stream error:", err));
+
+      // 5. Listen Submissions Status
+      onSnapshot(docSubmissions, (snap) => {
+        if(snap.exists()) {
+          startProgress();
+          window.submissions = snap.data().data || {};
+          window.renderSubmissionStatus();
+          if (window.currentUser && window.currentUser.role === 'student') {
+            window.renderStudentPage();
+          }
+          finishProgress();
+        }
+      }, (err) => console.error("Submissions stream error:", err));
+
+      // 6. Listen Submitted Files Collection (FOLLOW RULE 2)
+      onSnapshot(colSubmittedFiles, (querySnap) => {
+        startProgress();
+        const files = [];
+        querySnap.forEach((doc) => {
+          files.push({ ...doc.data(), _id: doc.id });
+        });
+        window.submittedFiles = files;
+        window.renderSubmittedFiles();
+        if (window.currentUser && window.currentUser.role === 'student') {
+          window.renderStudentPage();
+        }
+        finishProgress();
+      }, (err) => console.error("Files stream error:", err));
+    };
+
+    // ----------------------------------------------------
+    // WRITING FUNCTIONS FOR DATABASE UPDATES
+    // ----------------------------------------------------
+    window.updateClassroomsCloud = async () => {
+      if(!userAuth) return;
+      await setDoc(docClassrooms, { list: window.classrooms });
+    };
+
+    window.updateStudentsCloud = async () => {
+      if(!userAuth) return;
+      await setDoc(docStudents, { list: window.students });
+    };
+
+    window.updateAssignmentsCloud = async () => {
+      if(!userAuth) return;
+      await setDoc(docAssignments, { list: window.assignments });
+    };
+
+    window.updateExamsCloud = async () => {
+      if(!userAuth) return;
+      await setDoc(docExams, { list: window.exams });
+    };
+
+    window.updateSubmissionsCloud = async () => {
+      if(!userAuth) return;
+      await setDoc(docSubmissions, { data: window.submissions });
+    };
+
+    window.uploadFileCloud = async (assignName, studentId, fileName, fileSize, base64) => {
+      if(!userAuth) return;
+      // ล้างชื่อคีย์ให้ปลอดภัยจากอักขระพิเศษสำหรับ Document ID
+      const sanitizedDocId = `${assignName.replace(/[\/\s?#\\.]/g, '_')}___${studentId}`;
+      const fileRef = doc(db, 'artifacts', appId, 'public', 'data', 'submitted_files', sanitizedDocId);
+      await setDoc(fileRef, {
+        assignmentName: assignName,
+        studentId: studentId,
+        fileName: fileName,
+        uploadTime: new Date().toLocaleString('th-TH'),
+        fileSize: fileSize,
+        fileBase64: base64
+      });
+    };
+
+    window.deleteFileCloud = async (docId) => {
+      if(!userAuth) return;
+      const fileRef = doc(db, 'artifacts', appId, 'public', 'data', 'submitted_files', docId);
+      await deleteDoc(fileRef);
+    };
+  </script>
+
+  <!-- Dynamic Logic Handlers -->
+  <script>
+// จัดเก็บข้อมูลลง LocalStorage เป็นสำรองแบบ High-Performance
+function loadLocalStorage() {
+  if (localStorage.getItem('mahissara_students')) window.students = JSON.parse(localStorage.getItem('mahissara_students'));
+  if (localStorage.getItem('mahissara_assignments')) window.assignments = JSON.parse(localStorage.getItem('mahissara_assignments'));
+  if (localStorage.getItem('mahissara_exams')) window.exams = JSON.parse(localStorage.getItem('mahissara_exams'));
+  if (localStorage.getItem('mahissara_submissions')) window.submissions = JSON.parse(localStorage.getItem('mahissara_submissions'));
+  if (localStorage.getItem('mahissara_submittedFiles')) window.submittedFiles = JSON.parse(localStorage.getItem('mahissara_submittedFiles'));
+  if (localStorage.getItem('mahissara_classrooms')) window.classrooms = JSON.parse(localStorage.getItem('mahissara_classrooms'));
+}
+
+function saveLocalStorage() {
+  localStorage.setItem('mahissara_students', JSON.stringify(window.students));
+  localStorage.setItem('mahissara_assignments', JSON.stringify(window.assignments));
+  localStorage.setItem('mahissara_exams', JSON.stringify(window.exams));
+  localStorage.setItem('mahissara_submissions', JSON.stringify(window.submissions));
+  localStorage.setItem('mahissara_submittedFiles', JSON.stringify(window.submittedFiles));
+  localStorage.setItem('mahissara_classrooms', JSON.stringify(window.classrooms));
+}
+
+// โหลดข้อมูลสำรอง
+loadLocalStorage();
+
+// Login Handler
+function doLogin(){
+  const user = document.getElementById('loginUser').value.trim();
+  const pass = document.getElementById('loginPass').value.trim();
+  if(!user || !pass){
+    Swal.fire({icon:'warning',title:'กรุณากรอกข้อมูลให้ครบ',text:'ป้อนชื่อผู้ใช้และรหัสผ่าน'});
+    return;
+  }
+  if(user==='teacher' && pass==='666222'){
+    window.currentUser = {role:'teacher'};
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('teacherPage').style.display = 'block';
+    document.getElementById('studentPage').style.display = 'none';
+    Swal.fire({icon:'success',title:'เข้าสู่ระบบสำเร็จ',text:'ยินดีต้อนรับคุณครูเข้าสู่ระบบจัดเก็บข้อมูลเรียลไทม์',timer:1500,showConfirmButton:false});
+    showTab('students');
+  } else if(user && pass && user===pass){
+    const stu = window.students.find(s=>s.id===user);
+    if(stu){
+      window.currentUser = {role:'student', data:stu};
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('teacherPage').style.display = 'none';
+      document.getElementById('studentPage').style.display = 'block';
+      renderStudentPage();
+      Swal.fire({icon:'success',title:'เข้าสู่ระบบสำเร็จ',text:'ยินดีต้อนรับนักเรียน ' + stu.name,timer:1500,showConfirmButton:false});
+    } else {
+      Swal.fire({icon:'error',title:'ไม่พบข้อมูล',text:'ไม่พบรหัสนักเรียนนี้ในระบบ กรุณาแจ้งคุณครูผู้ควบคุมระบบเพื่อลงทะเบียน'});
+    }
+  } else {
+    Swal.fire({icon:'error',title:'เข้าสู่ระบบไม่สำเร็จ',text:'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'});
+  }
+}
+
+function showLogoutConfirm(){
+  Swal.fire({
+    icon:'question',
+    title:'ยืนยันการออกจากระบบ',
+    text:'คุณต้องการออกจากระบบหรือไม่?',
+    showCancelButton:true,
+    confirmButtonText:'ใช่ ออกจากระบบ',
+    cancelButtonText:'ยกเลิก',
+    confirmButtonColor:'#dc2626'
+  }).then(r=>{
+    if(r.isConfirmed) logout();
+  });
+}
+
+function logout(){
+  window.currentUser = null;
+  document.getElementById('loginUser').value='';
+  document.getElementById('loginPass').value='';
+  const fileInput = document.getElementById('stuSubmitFile');
+  if(fileInput) fileInput.value='';
+  const statusEl = document.getElementById('stuFileStatus');
+  if(statusEl) statusEl.textContent = 'ยังไม่มีไฟล์';
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('teacherPage').style.display = 'none';
+  document.getElementById('studentPage').style.display = 'none';
+  showPage('loginPage');
+}
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id !== 'loginPage'){
+    document.getElementById('loginPage').style.display = 'none';
+  }
+}
+
+function showTab(tab){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.add('hidden'));
+  document.getElementById('tab-'+tab).classList.remove('hidden');
+  document.querySelectorAll('.tab-btn').forEach(b=>{
+    b.classList.remove('bg-emerald-600','text-white');
+    b.classList.add('hover:bg-emerald-100','text-gray-700');
+  });
+  const btn = document.querySelector(`[data-tab="${tab}"]`);
+  if(btn){
+    btn.classList.add('bg-emerald-600','text-white');
+    btn.classList.remove('hover:bg-emerald-100','text-gray-700');
+  }
+  if(tab==='scan') updateScanSelect();
+  if(tab==='files') initFileFilters();
+  if(tab==='submissions') initSubmissionFilters();
+  setTimeout(() => lucide.createIcons(), 100);
+}
+
+// Classrooms Handler
+function renderClassrooms(){
+  const el = document.getElementById('classroomList');
+  if(!el) return;
+  el.innerHTML = window.classrooms.map((r,i)=>`
+    <div class="flex justify-between items-center bg-white/70 px-4 py-3 rounded-2xl border border-emerald-50">
+      <span class="font-bold text-emerald-800">🏫 ชั้นมัธยมศึกษาปีที่ ${r}</span>
+      <button onclick="removeClassroom(${i})" class="text-red-500 text-sm font-bold hover:underline">ลบห้อง</button>
+    </div>
+  `).join('');
+  updateRoomSelects();
+}
+async function addClassroom(){
+  const v = document.getElementById('newRoom').value.trim();
+  if(!v) return;
+  if(window.classrooms.includes(v)) {
+    Swal.fire({icon:'warning',title:'มีห้องเรียนนี้อยู่แล้ว'});
+    return;
+  }
+  window.classrooms.push(v);
+  document.getElementById('newRoom').value='';
+  renderClassrooms();
+  saveLocalStorage();
+  if(window.updateClassroomsCloud) await window.updateClassroomsCloud();
+  Swal.fire({icon:'success',title:'เพิ่มห้องเรียนสำเร็จ',timer:1000,showConfirmButton:false});
+}
+async function removeClassroom(i){
+  window.classrooms.splice(i,1);
+  renderClassrooms();
+  saveLocalStorage();
+  if(window.updateClassroomsCloud) await window.updateClassroomsCloud();
+  Swal.fire({icon:'info',title:'ลบห้องเรียนเรียบร้อย',timer:1000,showConfirmButton:false});
+}
+function updateRoomSelects(){
+  const opts = window.classrooms.map(r=>`<option value="${r}">ม.${r}</option>`).join('');
+  const sel = document.getElementById('stuRoom');
+  if(sel) sel.innerHTML = `<option value="">-- เลือกห้อง --</option>`+opts;
+  
+  const roomFilter = document.getElementById('roomFilter');
+  if(roomFilter) roomFilter.innerHTML = `<option value="">📚 ทั้งหมด</option>` + opts;
+}
+
+// Students Handler
+async function addStudent(){
+  const id = document.getElementById('stuId').value.trim();
+  const name = document.getElementById('stuName').value.trim();
+  const room = document.getElementById('stuRoom').value;
+  if(!id||!name||!room){Swal.fire({icon:'warning',title:'กรุณากรอกข้อมูลนักเรียนให้ครบ'});return;}
+  if(window.students.find(s=>s.id===id)){Swal.fire({icon:'warning',title:'รหัสนักเรียนซ้ำกับคนอื่นในระบบ'});return;}
+  window.students.push({id,name,room,avatar:""});
+  document.getElementById('stuId').value='';
+  document.getElementById('stuName').value='';
+  renderStudentsByRoom();
+  saveLocalStorage();
+  if(window.updateStudentsCloud) await window.updateStudentsCloud();
+  Swal.fire({icon:'success',title:'เพิ่มนักเรียนสำเร็จ',timer:1000,showConfirmButton:false});
+}
+async function importStudentList(){
+  const txt = document.getElementById('importStudents').value.trim();
+  if(!txt){Swal.fire({icon:'warning',title:'กรุณาใส่ข้อมูลนักเรียน'});return;}
+  const lines = txt.split('\n').filter(l=>l.trim());
+  let count=0;
+  lines.forEach(l=>{
+    const parts = l.split(',');
+    if(parts.length>=3){
+      const id=parts[0].trim(), name=parts[1].trim(), room=parts[2].trim();
+      if(!window.students.find(s=>s.id===id)){
+        window.students.push({id,name,room,avatar:""});
+        count++;
+      }
+    }
+  });
+  document.getElementById('importStudents').value='';
+  renderStudentsByRoom();
+  saveLocalStorage();
+  if(window.updateStudentsCloud) await window.updateStudentsCloud();
+  Swal.fire({icon:'success',title:`นำเข้าสำเร็จจำนวน ${count} คน`,timer:1500,showConfirmButton:false});
+}
+function importStudentExcel(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async function(ev){
+    try{
+      const data = new Uint8Array(ev.target.result);
+      const workbook = XLSX.read(data, {type:'array'});
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, {header:1});
+      let count=0;
+      rows.forEach((row,idx)=>{
+        if(idx===0) return; // Skip Header
+        if(row.length>=3){
+          const id=String(row[0]).trim(), name=String(row[1]).trim(), room=String(row[2]).trim();
+          if(id && name && room && !window.students.find(s=>s.id===id)){
+            window.students.push({id,name,room,avatar:""});
+            count++;
+          }
+        }
+      });
+      renderStudentsByRoom();
+      saveLocalStorage();
+      if(window.updateStudentsCloud) await window.updateStudentsCloud();
+      Swal.fire({icon:'success',title:`Import Excel สำเร็จ ${count} คน`,timer:1500,showConfirmButton:false});
+    }catch(err){
+      Swal.fire({icon:'error',title:'นำเข้าไฟล์ Excel ไม่สำเร็จ',text:err.message});
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  e.target.value='';
+}
+function renderStudentsByRoom(){
+  const search = (document.getElementById('searchStudent')?.value||'').toLowerCase();
+  const selectedRoom = document.getElementById('roomFilter')?.value || '';
+  let filtered = window.students.filter(s=>s.id.includes(search)||s.name.toLowerCase().includes(search));
+  if(selectedRoom) filtered = filtered.filter(s=>s.room===selectedRoom);
+  
+  const el = document.getElementById('studentTable');
+  if(!el) return;
+  if(filtered.length===0){el.innerHTML='<p class="text-gray-400 text-center py-4">ไม่พบข้อมูลนักเรียน</p>';return;}
+  
+  const grouped = {};
+  filtered.forEach(s=>{
+    if(!grouped[s.room]) grouped[s.room] = [];
+    grouped[s.room].push(s);
+  });
+  
+  let html = '';
+  Object.keys(grouped).sort().forEach(room=>{
+    html += `
+    <div class="mb-4 bg-white/50 p-3 rounded-2xl border border-gray-100">
+      <div class="bg-emerald-600 px-4 py-2 rounded-xl font-bold text-white mb-2 text-sm flex justify-between items-center">
+        <span>📚 มัธยมศึกษาปีที่ ${room}</span>
+        <span class="text-xs">จำนวน ${grouped[room].length} คน</span>
+      </div>
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-emerald-900 border-b border-emerald-100 text-left">
+            <th class="px-3 py-2 w-1/4">รหัสนักเรียน</th>
+            <th class="px-3 py-2 w-1/2">ชื่อ-สกุล</th>
+            <th class="px-3 py-2 text-center w-1/4">จัดการ</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${grouped[room].map(s=>`
+            <tr class="border-b border-gray-100 hover:bg-emerald-50/40 transition-colors">
+              <td class="px-3 py-2 font-mono font-bold text-gray-700">${s.id}</td>
+              <td class="px-3 py-2 font-semibold text-gray-800">${s.name}</td>
+              <td class="px-3 py-2 text-center">
+                <button onclick="editStudent('${s.id}')" class="text-blue-600 text-xs font-bold mr-3 hover:underline">แก้ไข</button>
+                <button onclick="deleteStudent('${s.id}')" class="text-red-500 text-xs font-bold hover:underline">ลบ</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+function deleteStudent(id){
+  Swal.fire({
+    title:'ลบรายชื่อนักเรียน?',
+    text:'คุณแน่ใจว่าต้องการลบนักเรียนคนนี้ออกจากระบบคลาวด์หรือไม่?',
+    icon:'warning',
+    showCancelButton:true,
+    confirmButtonText:'ยืนยันการลบ',
+    cancelButtonText:'ยกเลิก',
+    confirmButtonColor:'#dc2626'
+  }).then(async res=>{
+    if(res.isConfirmed){
+      window.students = window.students.filter(s=>s.id!==id);
+      renderStudentsByRoom();
+      saveLocalStorage();
+      if(window.updateStudentsCloud) await window.updateStudentsCloud();
+      Swal.fire('สำเร็จ', 'ลบนักเรียนเสร็จสิ้น', 'success');
+    }
+  });
+}
+function editStudent(id){
+  const s = window.students.find(x=>x.id===id);
+  if(!s) return;
+  Swal.fire({
+    title:'แก้ไขข้อมูลนักเรียน',
+    html:`
+      <div class="text-left mb-2 text-sm font-semibold text-gray-600">ชื่อ-นามสกุล</div>
+      <input id="swal-name" class="swal2-input !mt-1 !mb-4" value="${s.name}" placeholder="ชื่อ-สกุล">
+      <div class="text-left mb-2 text-sm font-semibold text-gray-600">ห้องเรียน (ระบุเช่น 6/1)</div>
+      <input id="swal-room" class="swal2-input !mt-1" value="${s.room}" placeholder="ห้อง">`,
+    showCancelButton:true,
+    confirmButtonText:'บันทึก',
+    cancelButtonText:'ยกเลิก',
+    preConfirm:()=>{
+      const name = document.getElementById('swal-name').value.trim();
+      const room = document.getElementById('swal-room').value.trim();
+      if(!name || !room) {
+        Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน');
+      }
+      return {name, room};
+    }
+  }).then(async r=>{
+    if(r.isConfirmed){
+      s.name = r.value.name;
+      s.room = r.value.room;
+      renderStudentsByRoom();
+      saveLocalStorage();
+      if(window.updateStudentsCloud) await window.updateStudentsCloud();
+      Swal.fire({icon:'success',title:'แก้ไขข้อมูลสำเร็จ',timer:1000,showConfirmButton:false});
+    }
+  });
+}
+
+// Assignments Handler
+async function addAssignment(){
+  const name = document.getElementById('assignName').value.trim();
+  const date = document.getElementById('assignDate').value;
+  if(!name || !date){
+    Swal.fire({icon:'warning',title:'กรุณากรอกข้อมูลงานและกำหนดส่ง'});
+    return;
+  }
+  window.assignments.push({name, date});
+  document.getElementById('assignName').value = '';
+  document.getElementById('assignDate').value = '';
+  renderAssignments();
+  initSubmissionFilters();
+  saveLocalStorage();
+  if(window.updateAssignmentsCloud) await window.updateAssignmentsCloud();
+  Swal.fire({icon:'success',title:'สร้างมอบหมายใบงานใหม่เรียบร้อย',timer:1200,showConfirmButton:false});
+}
+function renderAssignments(){
+  const el = document.getElementById('assignmentList');
+  if(!el) return;
+  if(window.assignments.length === 0){
+    el.innerHTML = `<p class="text-gray-400 text-center py-6">ยังไม่มีมอบหมายใบงานการเรียนการสอน</p>`;
+    return;
+  }
+  el.innerHTML = window.assignments.map((a,idx)=>`
+    <div class="flex flex-wrap justify-between items-center bg-white/70 px-4 py-3 rounded-2xl mb-2 border border-gray-100 hover:bg-emerald-50/20 transition-all">
+      <div class="flex-1 min-w-[200px]">
+        <h4 class="font-bold text-gray-800">${a.name}</h4>
+        <p class="text-xs text-gray-500 font-semibold">⏰ กำหนดส่ง: ${new Date(a.date).toLocaleString('th-TH')}</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="editAssignment(${idx})" class="text-blue-600 text-xs font-bold hover:underline">แก้ไข</button>
+        <button onclick="deleteAssignment(${idx})" class="text-red-500 text-xs font-bold hover:underline">ลบ</button>
+      </div>
+    </div>
+  `).join('');
+}
+function editAssignment(idx){
+  const a = window.assignments[idx];
+  Swal.fire({
+    title: 'แก้ไขรายละเอียดใบงาน',
+    html: `
+      <div class="text-left mb-2 text-sm font-semibold text-gray-600">ชื่องาน</div>
+      <input id="swal-assign-name" class="swal2-input !mt-1 !mb-4" value="${a.name}">
+      <div class="text-left mb-2 text-sm font-semibold text-gray-600">กำหนดส่ง</div>
+      <input type="datetime-local" id="swal-assign-date" class="swal2-input !mt-1" value="${a.date}">`,
+    showCancelButton: true,
+    confirmButtonText: 'บันทึก',
+    cancelButtonText: 'ยกเลิก',
+    preConfirm: () => {
+      const name = document.getElementById('swal-assign-name').value.trim();
+      const date = document.getElementById('swal-assign-date').value;
+      if(!name || !date) Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน');
+      return {name, date};
+    }
+  }).then(async r=>{
+    if(r.isConfirmed){
+      if(a.name !== r.value.name) {
+        if(window.submissions[a.name]){
+          window.submissions[r.value.name] = window.submissions[a.name];
+          delete window.submissions[a.name];
+        }
+      }
+      window.assignments[idx] = r.value;
+      renderAssignments();
+      initSubmissionFilters();
+      saveLocalStorage();
+      if(window.updateAssignmentsCloud) await window.updateAssignmentsCloud();
+      if(window.updateSubmissionsCloud) await window.updateSubmissionsCloud();
+      Swal.fire('สำเร็จ', 'แก้ไขข้อมูลใบงานเรียบร้อย', 'success');
+    }
+  });
+}
+function deleteAssignment(idx){
+  Swal.fire({
+    title: 'ต้องการลบใบงานนี้?',
+    text: 'การลบจะลบข้อมูลประวัติและการเช็คสถานะงานนี้ทั้งหมด ดำเนินการต่อหรือไม่?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'ยืนยัน',
+    cancelButtonText: 'ยกเลิก',
+    confirmButtonColor: '#dc2626'
+  }).then(async r=>{
+    if(r.isConfirmed){
+      const a = window.assignments[idx];
+      if(window.submissions[a.name]) delete window.submissions[a.name];
+      window.assignments.splice(idx,1);
+      renderAssignments();
+      initSubmissionFilters();
+      saveLocalStorage();
+      if(window.updateAssignmentsCloud) await window.updateAssignmentsCloud();
+      if(window.updateSubmissionsCloud) await window.updateSubmissionsCloud();
+      Swal.fire('สำเร็จ', 'ลบใบงานที่เลือกเสร็จสิ้น', 'success');
+    }
+  });
+}
+
+// Exams Handler
+async function addExam(){
+  const name = document.getElementById('examName').value.trim();
+  const max = parseFloat(document.getElementById('examMaxScore').value) || 20;
+  if(!name){
+    Swal.fire({icon:'warning',title:'กรุณากรอกชื่อหัวข้อสอบ'});
+    return;
+  }
+  window.exams.push({name, maxScore: max, scores: {}});
+  document.getElementById('examName').value = '';
+  renderExams();
+  saveLocalStorage();
+  if(window.updateExamsCloud) await window.updateExamsCloud();
+  Swal.fire({icon:'success',title:'เพิ่มการสอบใหม่เรียบร้อย',timer:1000,showConfirmButton:false});
+}
+function renderExams(){
+  const el = document.getElementById('examList');
+  if(!el) return;
+  if(window.exams.length === 0){
+    el.innerHTML = `<p class="text-gray-400 text-center py-6">ยังไม่มีผลและรายการสอบในระบบ</p>`;
+    return;
+  }
+  let html = '';
+  window.exams.forEach((ex,idx)=>{
+    html += `
+      <div class="mb-4 bg-white/60 p-4 rounded-2xl border border-gray-100">
+        <div class="flex justify-between items-center mb-2 flex-wrap gap-2">
+          <div>
+            <h4 class="font-bold text-gray-800 text-base">${ex.name}</h4>
+            <p class="text-xs font-semibold text-emerald-700">คะแนนเต็ม: ${ex.maxScore} คะแนน</p>
+          </div>
+          <button onclick="deleteExam(${idx})" class="text-red-500 font-bold hover:underline text-xs">ลบผลสอบนี้</button>
+        </div>
+        <div class="bg-white/80 p-3 rounded-xl max-h-48 overflow-y-auto border border-gray-50 text-xs">
+          <div class="font-bold text-gray-600 border-b border-gray-100 pb-1 mb-2 flex justify-between">
+            <span>👤 นักเรียน</span>
+            <span>คะแนน</span>
+          </div>
+          ${window.students.map(s => {
+            const score = ex.scores[s.id] !== undefined ? ex.scores[s.id] : '-';
+            return `
+              <div class="flex justify-between items-center py-1 border-b border-gray-50 hover:bg-emerald-50/20">
+                <span>${s.name} (${s.id})</span>
+                <span class="font-mono font-bold text-emerald-800 cursor-pointer" onclick="editSingleExamScore(${idx}, '${s.id}')">
+                  ${score} / ${ex.maxScore} <span class="text-[10px] text-blue-500 font-normal">📝 แก้</span>
+                </span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  });
+  el.innerHTML = html;
+  
+  const select = document.getElementById('examScoreSelect');
+  if(select){
+    select.innerHTML = `<option value="">-- เลือกหัวข้อสอบที่จะนำเข้าคะแนน --</option>` + window.exams.map((ex,i)=>`<option value="${i}">${ex.name}</option>`).join('');
+  }
+}
+function deleteExam(idx){
+  Swal.fire({
+    title: 'ยืนยันลบการสอบ?',
+    text: 'การสอบนี้รวมทั้งคะแนนทั้งหมดของนักเรียนจะถูกลบออกจากคลาวด์',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'ตกลงลบ',
+    cancelButtonText: 'ยกเลิก',
+    confirmButtonColor: '#dc2626'
+  }).then(async r=>{
+    if(r.isConfirmed){
+      window.exams.splice(idx,1);
+      renderExams();
+      saveLocalStorage();
+      if(window.updateExamsCloud) await window.updateExamsCloud();
+      Swal.fire('เรียบร้อย', 'ลบเรียบร้อย', 'success');
+    }
+  });
+}
+function editSingleExamScore(examIdx, studentId){
+  const ex = window.exams[examIdx];
+  const s = window.students.find(x=>x.id===studentId);
+  const current = ex.scores[studentId] !== undefined ? ex.scores[studentId] : '';
+  Swal.fire({
+    title: `ใส่คะแนน: ${s.name}`,
+    input: 'number',
+    inputValue: current,
+    inputAttributes: { min: 0, max: ex.maxScore, step: 0.1 },
+    showCancelButton: true,
+    confirmButtonText: 'ตกลง',
+    cancelButtonText: 'ยกเลิก',
+    inputValidator: (val) => {
+      if(!val) return 'กรุณาระบุคะแนน';
+      const num = parseFloat(val);
+      if(num < 0 || num > ex.maxScore) return `คะแนนต้องอยู่ระหว่าง 0 - ${ex.maxScore}`;
+    }
+  }).then(async res=>{
+    if(res.isConfirmed){
+      ex.scores[studentId] = parseFloat(res.value);
+      renderExams();
+      saveLocalStorage();
+      if(window.updateExamsCloud) await window.updateExamsCloud();
+      Swal.fire({icon:'success',title:'อัปเดตคะแนนแล้ว',timer:1000,showConfirmButton:false});
+    }
+  });
+}
+async function importExamScores(){
+  const examIdx = document.getElementById('examScoreSelect').value;
+  const txt = document.getElementById('importExamScores').value.trim();
+  if(!examIdx) { Swal.fire('แจ้งเตือน','กรุณาเลือกหัวข้อการสอบก่อน','warning'); return;}
+  if(!txt) { Swal.fire('แจ้งเตือน','กรุณาป้อนข้อความคะแนน','warning'); return;}
+  
+  const ex = window.exams[examIdx];
+  const lines = txt.split('\n').filter(l=>l.trim());
+  let count = 0;
+  lines.forEach(l=>{
+    const parts = l.split(',');
+    if(parts.length>=2){
+      const id = parts[0].trim();
+      const score = parseFloat(parts[1].trim());
+      if(window.students.find(s=>s.id===id) && !isNaN(score)){
+        ex.scores[id] = score;
+        count++;
+      }
+    }
+  });
+  document.getElementById('importExamScores').value = '';
+  renderExams();
+  saveLocalStorage();
+  if(window.updateExamsCloud) await window.updateExamsCloud();
+  Swal.fire('สำเร็จ', `อัปโหลดคะแนนสอบเรียบร้อย ทั้งหมด ${count} คน`, 'success');
+}
+function importExamExcel(e){
+  const examIdx = document.getElementById('examScoreSelect').value;
+  if(!examIdx){
+    Swal.fire('แจ้งเตือน','กรุณาเลือกหัวข้อสอบที่จะบันทึกคะแนนก่อนเลือกไฟล์','warning');
+    e.target.value='';
+    return;
+  }
+  const file = e.target.files[0];
+  if(!file) return;
+  const ex = window.exams[examIdx];
+  const reader = new FileReader();
+  reader.onload = async function(ev){
+    try{
+      const data = new Uint8Array(ev.target.result);
+      const workbook = XLSX.read(data, {type:'array'});
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, {header:1});
+      let count=0;
+      rows.forEach((row,idx)=>{
+        if(idx===0) return;
+        if(row.length>=2){
+          const id = String(row[0]).trim();
+          const score = parseFloat(row[1]);
+          if(id && !isNaN(score) && window.students.find(s=>s.id===id)){
+            ex.scores[id] = score;
+            count++;
+          }
+        }
+      });
+      renderExams();
+      saveLocalStorage();
+      if(window.updateExamsCloud) await window.updateExamsCloud();
+      Swal.fire({icon:'success',title:`นำเข้าคะแนนสำเร็จจำนวน ${count} คน`});
+    } catch(err) {
+      Swal.fire({icon:'error',title:'ล้มเหลว',text:err.message});
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  e.target.value='';
+}
+
+// Scan Barcode & Fast Check-In
+function updateScanSelect(){
+  const sel = document.getElementById('scanAssignment');
+  if(!sel) return;
+  sel.innerHTML = `<option value="">-- เลือกใบงานมอบหมาย --</option>` + window.assignments.map(a=>`<option value="${a.name}">${a.name}</option>`).join('');
+}
+async function handleScan(e){
+  if(e.key === 'Enter'){
+    const val = e.target.value.trim();
+    const assignName = document.getElementById('scanAssignment').value;
+    if(!assignName){
+      Swal.fire('แจ้งเตือน','กรุณาเลือกใบงานที่จะสแกนส่งก่อนการทำงาน','warning');
+      e.target.value = '';
+      return;
+    }
+    if(!val) return;
+    
+    const stu = window.students.find(s => s.id === val);
+    if(!stu){
+      window.scanLog.unshift(`⚠️ [FAIL] ไม่พบรหัสนักเรียน: ${val} (${new Date().toLocaleTimeString()})`);
+      updateScanLogUI();
+      e.target.value = '';
+      return;
+    }
+    
+    if(!window.submissions[assignName]) window.submissions[assignName] = [];
+    if(!window.submissions[assignName].includes(val)){
+      window.submissions[assignName].push(val);
+    }
+    
+    window.scanLog.unshift(`✅ [SUCCESS] ${stu.name} (${stu.id}) ห้อง ${stu.room} เช็คชื่อส่งงาน '${assignName}' เรียบร้อย (${new Date().toLocaleTimeString()})`);
+    updateScanLogUI();
+    saveLocalStorage();
+    if(window.updateSubmissionsCloud) await window.updateSubmissionsCloud();
+    e.target.value = '';
+  }
+}
+function updateScanLogUI(){
+  const logEl = document.getElementById('scanLog');
+  if(!logEl) return;
+  if(window.scanLog.length===0){
+    logEl.innerHTML = '<p class="text-gray-400 text-center py-4">ยังไม่มีประวัติการเช็คชื่อ/สแกนส่งงานในเซสชันนี้</p>';
+    return;
+  }
+  logEl.innerHTML = window.scanLog.map(log => {
+    const isSuccess = log.includes('SUCCESS');
+    return `<div class="p-2 mb-1 rounded-lg text-xs font-semibold ${isSuccess ? 'bg-green-100 text-green-800':'bg-red-100 text-red-800'}">${log}</div>`;
+  }).join('');
+}
+function clearScanLog(){
+  window.scanLog = [];
+  updateScanLogUI();
+}
+
+// Submissions Filter & Display
+function initSubmissionFilters(){
+  const assignSel = document.getElementById('submissionFilterAssign');
+  if(assignSel){
+    assignSel.innerHTML = `<option value="">-- งานทั้งหมด --</option>` + window.assignments.map(a=>`<option value="${a.name}">${a.name}</option>`).join('');
+  }
+  const roomSel = document.getElementById('submissionFilterRoom');
+  if(roomSel){
+    roomSel.innerHTML = `<option value="">-- ทุกห้องเรียน --</option>` + window.classrooms.map(r=>`<option value="${r}">ม.${r}</option>`).join('');
+  }
+}
+function renderSubmissionStatus(){
+  const selectedAssign = document.getElementById('submissionFilterAssign')?.value || '';
+  const selectedRoom = document.getElementById('submissionFilterRoom')?.value || '';
+  
+  let targetStudents = [...window.students];
+  if(selectedRoom) targetStudents = targetStudents.filter(s=>s.room===selectedRoom);
+  
+  let targetAssigns = [...window.assignments];
+  if(selectedAssign) targetAssigns = targetAssigns.filter(a=>a.name === selectedAssign);
+  
+  const el = document.getElementById('submissionTable');
+  if(!el) return;
+  if(targetStudents.length === 0 || targetAssigns.length === 0){
+    el.innerHTML = '<p class="text-gray-400 text-center py-4">ไม่มีข้อมูลที่สอดคล้องตามตัวกรอง</p>';
+    return;
+  }
+  
+  let html = `
+    <table class="w-full text-xs text-left border-collapse bg-white/80 rounded-2xl overflow-hidden shadow-sm">
+      <thead>
+        <tr class="bg-emerald-800 text-white font-bold">
+          <th class="p-3">รหัส</th>
+          <th class="p-3">ชื่อ-สกุล</th>
+          <th class="p-3">ห้อง</th>
+          ${targetAssigns.map(a=>`<th class="p-3 text-center truncate max-w-[120px]" title="${a.name}">${a.name}</th>`).join('')}
+        </tr>
+      </thead>
+      <tbody>
+  `;
+  
+  targetStudents.forEach(s=>{
+    html += `
+      <tr class="border-b border-gray-100 hover:bg-emerald-50/30">
+        <td class="p-3 font-mono font-bold text-gray-700">${s.id}</td>
+        <td class="p-3 font-semibold text-gray-800">${s.name}</td>
+        <td class="p-3 font-bold text-emerald-800">ม.${s.room}</td>
+        ${targetAssigns.map(a=>{
+          const hasSubmitted = window.submissions[a.name] && window.submissions[a.name].includes(s.id);
+          const hasFile = window.submittedFiles.some(f => f.assignmentName === a.name && f.studentId === s.id);
+          return `
+            <td class="p-3 text-center font-bold">
+              <span class="cursor-pointer transition-transform inline-block hover:scale-110" onclick="toggleSubmissionState('${a.name}', '${s.id}')">
+                ${hasSubmitted ? '🟢 ส่งแล้ว' : '🔴 ยังไม่ส่ง'}
+              </span>
+              ${hasFile ? '<span class="block text-[10px] text-blue-500 font-normal">📎 มีไฟล์แนบ</span>' : ''}
+            </td>
+          `;
+        }).join('')}
+      </tr>
+    `;
+  });
+  
+  html += `</tbody></table>`;
+  el.innerHTML = html;
+}
+async function toggleSubmissionState(assignName, studentId){
+  if(!window.submissions[assignName]) window.submissions[assignName] = [];
+  const idx = window.submissions[assignName].indexOf(studentId);
+  if(idx > -1){
+    window.submissions[assignName].splice(idx,1);
+  } else {
+    window.submissions[assignName].push(studentId);
+  }
+  renderSubmissionStatus();
+  saveLocalStorage();
+  if(window.updateSubmissionsCloud) await window.updateSubmissionsCloud();
+}
+
+// Download PDF Report
+function downloadSubmissionPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape' });
+  
+  doc.setFont("Helvetica"); 
+  doc.text("Mahissarabodi School Homework Submission Report", 14, 15);
+  doc.setFontSize(10);
+  doc.text("Generated: " + new Date().toLocaleString('th-TH'), 14, 22);
+  
+  const headers = [["Student ID", "Name", "Room", ...window.assignments.map(a=>a.name.substring(0,18)+'...')]];
+  const body = window.students.map(s => {
+    const row = [s.id, s.name, s.room];
+    window.assignments.forEach(a => {
+      const isSub = window.submissions[a.name] && window.submissions[a.name].includes(s.id);
+      row.push(isSub ? "Submitted" : "Missing");
+    });
+    return row;
+  });
+  
+  doc.autoTable({
+    head: headers,
+    body: body,
+    startY: 28,
+    styles: { fontSize: 8 },
+    headStyles: { fillColor: [5, 150, 105] }
+  });
+  
+  doc.save("mahissara-homework-report.pdf");
+}
+
+// Download Excel Report
+function downloadSubmissionExcel(){
+  const wb = XLSX.utils.book_new();
+  const headers = ["รหัสนักเรียน", "ชื่อ-นามสกุล", "ห้องเรียน"];
+  window.assignments.forEach(a => headers.push(a.name));
+  
+  const rows = [headers];
+  window.students.forEach(s => {
+    const row = [s.id, s.name, s.room];
+    window.assignments.forEach(a => {
+      const isSub = window.submissions[a.name] && window.submissions[a.name].includes(s.id);
+      row.push(isSub ? "ส่งแล้ว" : "ยังไม่ส่ง");
+    });
+    rows.push(row);
+  });
+  
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  XLSX.utils.book_append_sheet(wb, ws, "สรุปผลการส่งงาน");
+  XLSX.writeFile(wb, "รายงานสรุปการส่งงาน-มหิศราธิบดี.xlsx");
+}
+
+// Files Filters
+function initFileFilters(){
+  const assignSel = document.getElementById('fileFilterAssign');
+  if(assignSel) assignSel.innerHTML = `<option value="">-- ทุกใบงาน --</option>` + window.assignments.map(a=>`<option value="${a.name}">${a.name}</option>`).join('');
+  const roomSel = document.getElementById('fileFilterRoom');
+  if(roomSel) roomSel.innerHTML = `<option value="">-- ทุกห้องเรียน --</option>` + window.classrooms.map(r=>`<option value="${r}">ม.${r}</option>`).join('');
+}
+function renderSubmittedFiles(){
+  const assignFilter = document.getElementById('fileFilterAssign')?.value || '';
+  const roomFilter = document.getElementById('fileFilterRoom')?.value || '';
+  const searchTxt = (document.getElementById('fileSearchBox')?.value || '').toLowerCase();
+  
+  const el = document.getElementById('filesList');
+  if(!el) return;
+  
+  let filtered = window.submittedFiles.filter(f => {
+    const stu = window.students.find(s => s.id === f.studentId);
+    if(!stu) return false;
+    
+    const matchAssign = !assignFilter || f.assignmentName === assignFilter;
+    const matchRoom = !roomFilter || stu.room === roomFilter;
+    const matchSearch = !searchTxt || stu.name.toLowerCase().includes(searchTxt) || stu.id.includes(searchTxt);
+    
+    return matchAssign && matchRoom && matchSearch;
+  });
+  
+  if(filtered.length === 0){
+    el.innerHTML = '<p class="text-gray-400 text-center py-6">ไม่พบไฟล์ส่งงานตามเงื่อนไขที่เลือก</p>';
+    return;
+  }
+  
+  el.innerHTML = filtered.map((f, i) => {
+    const stu = window.students.find(s => s.id === f.studentId);
+    return `
+      <div class="p-4 mb-2 bg-white/70 rounded-2xl border border-gray-100 flex justify-between items-center flex-wrap gap-2 hover:bg-emerald-50/20 transition-all">
+        <div>
+          <h4 class="font-bold text-gray-800 text-sm">${f.assignmentName}</h4>
+          <p class="text-xs text-gray-500 font-semibold">👤 ส่งโดย: ${stu ? stu.name : 'ไม่ทราบนาม'} (${f.studentId}) ม.${stu ? stu.room : '-'}</p>
+          <p class="text-xs text-emerald-700 font-mono font-bold">📄 ${f.fileName} (${f.fileSize}) - ${f.uploadTime}</p>
+        </div>
+        <div class="flex gap-2">
+          ${f.fileBase64 ? `<button onclick="viewFileModal('${f.fileName}', '${f.fileBase64}')" class="btn-info text-white text-xs font-bold px-3 py-2 rounded-xl">ดูไฟล์ภาพ</button>` : ''}
+          <button onclick="downloadSimulatedFile('${f.fileName}', '${f.fileBase64 || '#'}')" class="btn-primary text-white text-xs font-bold px-3 py-2 rounded-xl">ดาวน์โหลด</button>
+          <button onclick="deleteFileRecord('${f._id}')" class="btn-danger text-white text-xs font-bold px-3 py-2 rounded-xl">ลบไฟล์</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+function viewFileModal(fileName, base64){
+  Swal.fire({
+    title: fileName,
+    imageWidth: 400,
+    imageHeight: 'auto',
+    imageUrl: base64,
+    imageAlt: fileName,
+    confirmButtonText: 'ปิดหน้าต่าง'
+  });
+}
+function downloadSimulatedFile(fileName, base64){
+  if(!base64 || base64 === '#'){
+    Swal.fire('แจ้งเตือน', 'เนื่องจากไฟล์จำลองนี้ถูกส่งแบบไม่มีข้อมูล Base64, จึงไม่สามารถดาวน์โหลดได้ในเซสชันนี้', 'info');
+    return;
+  }
+  const link = document.createElement('a');
+  link.href = base64;
+  link.download = fileName;
+  link.click();
+}
+function deleteFileRecord(docId){
+  Swal.fire({
+    title:'ต้องการลบไฟล์นี้จากคลาวด์?',
+    icon:'warning',
+    showCancelButton:true,
+    confirmButtonText:'ยืนยันการลบ',
+    cancelButtonText:'ยกเลิก',
+    confirmButtonColor:'#dc2626'
+  }).then(async r=>{
+    if(r.isConfirmed){
+      if(window.deleteFileCloud) await window.deleteFileCloud(docId);
+      Swal.fire('สำเร็จ', 'ลบไฟล์ส่งงานเรียบร้อย', 'success');
+    }
+  });
+}
+
+// Student View Controller
+function renderStudentPage(){
+  if(!window.currentUser || window.currentUser.role !== 'student') return;
+  const s = window.currentUser.data;
+  
+  document.getElementById('stuDisplayName').textContent = s.name;
+  document.getElementById('stuDisplayId').textContent = 'รหัสนักเรียน: ' + s.id;
+  document.getElementById('stuDisplayRoom').textContent = 'ระดับชั้นห้องเรียน: ม.' + s.room;
+  
+  if(s.avatar) {
+    document.getElementById('studentAvatar').src = s.avatar;
+  } else {
+    document.getElementById('studentAvatar').src = 'https://api.dicebear.com/7.x/adventurer/svg?seed=' + s.id;
+  }
+  
+  const submitAssignSel = document.getElementById('stuSubmitAssign');
+  if(submitAssignSel){
+    submitAssignSel.innerHTML = window.assignments.map(a => `<option value="${a.name}">${a.name}</option>`).join('');
+  }
+  
+  const assignStatusEl = document.getElementById('stuAssignStatus');
+  if(assignStatusEl){
+    if(window.assignments.length === 0){
+      assignStatusEl.innerHTML = '<p class="text-gray-400 text-center py-4">ไม่มีงานมอบหมายในช่วงเวลานี้</p>';
+    } else {
+      assignStatusEl.innerHTML = window.assignments.map(a=>{
+        const hasSub = window.submissions[a.name] && window.submissions[a.name].includes(s.id);
+        const hasFile = window.submittedFiles.some(f => f.assignmentName === a.name && f.studentId === s.id);
+        const deadline = new Date(a.date);
+        const now = new Date();
+        const isLate = now > deadline && !hasSub;
+        
+        let statusBadge = '';
+        if(hasSub){
+          statusBadge = '<span class="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-1 rounded">ส่งแล้ว</span>';
+        } else if(isLate){
+          statusBadge = '<span class="bg-red-100 text-red-800 text-[10px] font-bold px-2 py-1 rounded">เลยกำหนดส่ง</span>';
+        } else {
+          statusBadge = '<span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-1 rounded">รอดำเนินการส่ง</span>';
+        }
+        
+        return `
+          <div class="p-3 bg-white/70 rounded-xl border border-gray-100 flex justify-between items-center">
+            <div>
+              <p class="font-bold text-gray-800">${a.name}</p>
+              <p class="text-[10px] text-gray-500 font-semibold">⏰ ส่งก่อน: ${deadline.toLocaleString('th-TH')}</p>
+              ${hasFile ? '<span class="text-[10px] text-blue-500 font-semibold">📎 แนบไฟล์แล้ว</span>' : ''}
+            </div>
+            <div>${statusBadge}</div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+  
+  const examScoreEl = document.getElementById('stuExamScores');
+  if(examScoreEl){
+    const stuExams = window.exams.filter(ex => ex.scores[s.id] !== undefined);
+    if(stuExams.length===0){
+      examScoreEl.innerHTML = '<p class="text-gray-400 text-center py-4">ยังไม่ประกาศผลคะแนนสอบของคุณ</p>';
+    } else {
+      examScoreEl.innerHTML = stuExams.map(ex=>{
+        const myScore = ex.scores[s.id];
+        const percent = (myScore / ex.maxScore) * 100;
+        let scoreColor = 'text-green-600';
+        if(percent < 50) scoreColor = 'text-red-500';
+        else if(percent < 75) scoreColor = 'text-yellow-600';
+        
+        return `
+          <div class="p-3 bg-white/70 rounded-xl border border-gray-100 flex justify-between items-center">
+            <div>
+              <p class="font-bold text-gray-800">${ex.name}</p>
+              <p class="text-[10px] text-gray-500 font-semibold">คะแนนเต็ม: ${ex.maxScore} คะแนน</p>
+            </div>
+            <div class="text-right">
+              <span class="font-mono font-bold text-lg ${scoreColor}">${myScore}</span>
+              <span class="text-xs text-gray-400">/${ex.maxScore}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+}
+
+// Avatar Changer
+function changeAvatar(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async function(e){
+    const base64 = e.target.result;
+    document.getElementById('studentAvatar').src = base64;
+    if(window.currentUser && window.currentUser.role === 'student'){
+      const sIdx = window.students.findIndex(st => st.id === window.currentUser.data.id);
+      if(sIdx > -1){
+        window.students[sIdx].avatar = base64;
+        window.currentUser.data.avatar = base64;
+        saveLocalStorage();
+        if(window.updateStudentsCloud) await window.updateStudentsCloud();
+        Swal.fire({icon:'success',title:'เปลี่ยนภาพโปรไฟล์เรียบร้อย',timer:1000,showConfirmButton:false});
+      }
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+// ระบบบีบอัดรูปภาพให้มีขนาดพอเหมาะก่อนอัปโหลดขึ้น Firebase
+function compressImage(file, callback) {
+  // หากเป็น PDF ไม่สามารถย่อขนาดด้วย Canvas ได้ ให้ส่งคืนทันที
+  if (file.type === 'application/pdf') {
+    const reader = new FileReader();
+    reader.onload = (e) => callback(e.target.result);
+    reader.readAsDataURL(file);
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function (event) {
+    const img = new Image();
+    img.src = event.target.result;
+    img.onload = function () {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      // กำหนดขนาดกว้างสูงสุด 800px โดยคงอัตราส่วนรูปเดิมไว้
+      const MAX_WIDTH = 800;
+      let width = img.width;
+      let height = img.height;
+
+      if (width > MAX_WIDTH) {
+        height *= MAX_WIDTH / width;
+        width = MAX_WIDTH;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // แปลงข้อมูลและบีบอัดความละเอียดภาพเหลือ 60% (.jpg / .webp)
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+      callback(dataUrl);
+    };
+  };
+  reader.readAsDataURL(file);
+}
+
+// File Submit Handler
+function studentSubmit(){
+  if(!window.currentUser || window.currentUser.role !== 'student') return;
+  const s = window.currentUser.data;
+  const assignName = document.getElementById('stuSubmitAssign').value;
+  const fileInput = document.getElementById('stuSubmitFile');
+  const file = fileInput.files[0];
+  
+  if(!assignName){
+    Swal.fire({icon:'warning',title:'กรุณาเลือกใบงานก่อนส่ง'});
+    return;
+  }
+  if(!file){
+    Swal.fire({icon:'warning',title:'กรุณาเลือกไฟล์งานแนบเพื่อดำเนินการ'});
+    return;
+  }
+  
+  Swal.fire({
+    title: 'กำลังเตรียมไฟล์และส่งงาน...',
+    text: 'กรุณารอสักครู่ ระบบกำลังบีบอัดภาพและอัปโหลดขึ้นเซิร์ฟเวอร์คลาวด์',
+    allowOutsideClick: false,
+    didOpen: () => { Swal.showLoading(); }
+  });
+
+  // ใช้การบีบอัดขนาดภาพเพื่อหลีกเลี่ยงข้อผิดพลาดเรื่องขนาดไฟล์เกินลิมิตคลาวด์
+  compressImage(file, async function(base64) {
+    try {
+      if(!window.submissions[assignName]) window.submissions[assignName] = [];
+      if(!window.submissions[assignName].includes(s.id)){
+        window.submissions[assignName].push(s.id);
+      }
+      
+      // คำนวณขนาดหลังการบีบอัดจำลอง
+      const compressedSizeKB = Math.round((base64.length * 3) / 4 / 1024);
+      const fileSizeStr = compressedSizeKB + ' KB';
+      
+      // ลบข้อมูลไฟล์เก่าที่เคยส่งในใบงานเดียวกันนี้ออกก่อน
+      window.submittedFiles = window.submittedFiles.filter(f => !(f.assignmentName === assignName && f.studentId === s.id));
+      
+      // บันทึกการส่งงานลงเซสชันสำรองก่อนป้องกันกรณีเน็ตหลุด
+      window.submittedFiles.push({
+        assignmentName: assignName,
+        studentId: s.id,
+        fileName: file.name,
+        uploadTime: new Date().toLocaleString('th-TH'),
+        fileSize: fileSizeStr,
+        fileBase64: base64
+      });
+      saveLocalStorage();
+
+      // บันทึกขึ้นระบบคลาวด์กลาง
+      if(window.uploadFileCloud) {
+        await window.uploadFileCloud(assignName, s.id, file.name, fileSizeStr, base64);
+      }
+      if(window.updateSubmissionsCloud) {
+        await window.updateSubmissionsCloud();
+      }
+      
+      renderStudentPage();
+      fileInput.value = '';
+      document.getElementById('stuFileStatus').textContent = 'ยังไม่ได้เลือกไฟล์';
+      
+      Swal.fire({
+        icon:'success',
+        title:'ส่งใบงานสำเร็จเรียบร้อย',
+        text:`ไฟล์ภาพได้รับการย่อขนาดให้พอดีและอัปโหลดแล้ว คุณครูสามารถเปิดตรวจได้ทันที`,
+        timer:2000
+      });
+    } catch (err) {
+      console.error("Upload process failed:", err);
+      // หากคลาวด์หลักขัดข้อง แต่อัปโหลดเสร็จบน LocalStorage แล้ว จะแจ้งเตือนให้สบายใจ
+      Swal.fire({
+        icon:'warning',
+        title:'บันทึกข้อมูลแบบออฟไลน์แล้ว',
+        text:'เซิร์ฟเวอร์คลาวด์ตอบสนองช้า ระบบบันทึกงานไว้ที่เครื่องคุณครูชั่วคราวแล้วกรุณาอย่าล้างข้อมูลเบราว์เซอร์',
+        confirmButtonText: 'ตกลง'
+      });
+    }
+  });
+}
+
+// View history modal
+function viewMySubmissions(){
+  if(!window.currentUser || window.currentUser.role !== 'student') return;
+  const s = window.currentUser.data;
+  const myFiles = window.submittedFiles.filter(f => f.studentId === s.id);
+  
+  if(myFiles.length === 0){
+    Swal.fire('ไม่มีข้อมูล', 'คุณยังไม่เคยส่งงานแบบอัปโหลดไฟล์เข้ามาเลย', 'info');
+    return;
+  }
+  
+  const htmlList = myFiles.map(f => `
+    <div class="text-left border-b border-gray-100 py-2">
+      <p class="font-bold text-gray-800 text-sm">${f.assignmentName}</p>
+      <p class="text-xs text-emerald-700 font-semibold font-mono">📄 ${f.fileName} (${f.fileSize})</p>
+      <p class="text-[10px] text-gray-400">ส่งเมื่อ: ${f.uploadTime}</p>
+    </div>
+  `).join('');
+  
+  Swal.fire({
+    title: 'ประวัติการแนบไฟล์งานของคุณ',
+    html: `<div class="max-h-60 overflow-y-auto">${htmlList}</div>`,
+    confirmButtonText: 'ปิดหน้าต่าง'
+  });
+}
+
+// File element list change indicator
+const fileField = document.getElementById('stuSubmitFile');
+if(fileField){
+  fileField.addEventListener('change', (e) => {
+    const f = e.target.files[0];
+    const status = document.getElementById('stuFileStatus');
+    if(f && status){
+      status.textContent = `${f.name} (${(f.size/1024).toFixed(1)} KB)`;
+    }
+  });
+}
+</script>
+ </body>
+</html>
+
+```
